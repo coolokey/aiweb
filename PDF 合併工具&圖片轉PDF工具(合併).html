@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF工具箱</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f7f7f7;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        #dropZone {
+            border: 2px dashed #3498db;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-bottom: 20px;
+        }
+        #dropZone:hover {
+            background-color: #e8f4fc;
+        }
+        #fileList {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        #fileList li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #fileList li:last-child {
+            border-bottom: none;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #e0e0e0;
+            padding: 3px;
+            border-radius: 3px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, .2);
+            margin-top: 5px;
+        }
+        .progress-bar-fill {
+            display: block;
+            height: 15px;
+            background-color: #3498db;
+            border-radius: 3px;
+            transition: width 500ms ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <h1>PDF工具箱</h1>
+    <div id="dropZone">
+        拖放PDF或圖片檔案到這裡或點擊選擇檔案
+        <input type="file" id="fileInput" multiple accept=".pdf,image/*" style="display: none;">
+    </div>
+    <ul id="fileList"></ul>
+    <button id="processButton" style="display: none;" disabled>處理檔案</button>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const processButton = document.getElementById('processButton');
+        let files = [];
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => e.preventDefault());
+        dropZone.addEventListener('drop', handleFiles);
+        fileInput.addEventListener('change', handleFiles);
+
+        function handleFiles(e) {
+            e.preventDefault();
+            const newFiles = e.dataTransfer ? e.dataTransfer.files : e.target.files;
+            files = [...files, ...Array.from(newFiles).filter(file => file.type === 'application/pdf' || file.type.startsWith('image/'))];
+            updateFileList();
+        }
+
+        function updateFileList() {
+            fileList.innerHTML = '';
+            files.forEach((file, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    ${file.name}
+                    <button onclick="removeFile(${index})">移除</button>
+                    <div class="progress-bar"><span class="progress-bar-fill" style="width: 0%"></span></div>
+                `;
+                fileList.appendChild(li);
+            });
+            processButton.style.display = files.length ? 'block' : 'none';
+            processButton.disabled = files.length === 0;
+        }
+
+        function removeFile(index) {
+            files.splice(index, 1);
+            updateFileList();
+        }
+
+        new Sortable(fileList, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            onEnd: (evt) => {
+                const item = files.splice(evt.oldIndex, 1)[0];
+                files.splice(evt.newIndex, 0, item);
+            }
+        });
+
+        processButton.addEventListener('click', async () => {
+            processButton.disabled = true;
+            const pdfFiles = files.filter(file => file.type === 'application/pdf');
+            const imageFiles = files.filter(file => file.type.startsWith('image/'));
+
+            if (pdfFiles.length > 1) {
+                await mergePDFs(pdfFiles);
+            }
+
+            if (imageFiles.length > 0) {
+                await convertImagesToPDF(imageFiles);
+            }
+
+            processButton.disabled = false;
+        });
+
+        async function mergePDFs(pdfFiles) {
+            const mergedPdf = await PDFLib.PDFDocument.create();
+
+            for (let i = 0; i < pdfFiles.length; i++) {
+                const file = pdfFiles[i];
+                const progressBar = fileList.children[i].querySelector('.progress-bar-fill');
+                try {
+                    progressBar.style.width = '50%';
+                    const pdfBytes = await file.arrayBuffer();
+                    const pdf = await PDFLib.PDFDocument.load(pdfBytes);
+                    const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+                    copiedPages.forEach((page) => mergedPdf.addPage(page));
+                    progressBar.style.width = '100%';
+                } catch (error) {
+                    console.error(`Error processing PDF file ${file.name}:`, error);
+                    alert(`處理PDF文件 ${file.name} 時發生錯誤：${error.message}`);
+                    progressBar.style.backgroundColor = '#e74c3c';
+                }
+            }
+
+            const pdfBytes = await mergedPdf.save();
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+            saveAs(blob, 'merged.pdf');
+        }
+
+        async function convertImagesToPDF(imageFiles) {
+            const zip = new JSZip();
+
+            for (let i = 0; i < imageFiles.length; i++) {
+                const file = imageFiles[i];
+                const progressBar = fileList.children[i].querySelector('.progress-bar-fill');
+                try {
+                    progressBar.style.width = '30%';
+                    const pdfDoc = await PDFLib.PDFDocument.create();
+                    let image;
+                    const arrayBuffer = await file.arrayBuffer();
+
+                    progressBar.style.width = '60%';
+                    if (file.type === 'image/png') {
+                        image = await pdfDoc.embedPng(arrayBuffer);
+                    } else if (file.type === 'image/jpeg' || file.type === 'image/jpg') {
+                        image = await pdfDoc.embedJpg(arrayBuffer);
+                    } else {
+                        throw new Error('不支持的圖片格式');
+                    }
+                    
+                    const page = pdfDoc.addPage();
+                    const { width, height } = page.getSize();
+                    page.drawImage(image, {
+                        x: 0,
+                        y: 0,
+                        width: width,
+                        height: height,
+                        fit: PDFLib.PageSizes.A4,
+                    });
+
+                    progressBar.style.width = '90%';
+                    const pdfBytes = await pdfDoc.save();
+                    const pdfName = file.name.replace(/\.[^/.]+$/, ".pdf");
+                    zip.file(pdfName, pdfBytes);
+
+                    progressBar.style.width = '100%';
+                } catch (error) {
+                    console.error(`Error processing image file ${file.name}:`, error);
+                    alert(`處理圖片文件 ${file.name} 時發生錯誤：${error.message}`);
+                    progressBar.style.backgroundColor = '#e74c3c';
+                }
+            }
+
+            try {
+                const content = await zip.generateAsync({type:"blob"});
+                saveAs(content, "images_to_pdf.zip");
+            } catch (error) {
+                console.error("Error generating zip file:", error);
+                alert("生成壓縮文件時發生錯誤：" + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
