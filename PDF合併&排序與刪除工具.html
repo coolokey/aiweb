@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF合併、排序與刪除工具</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <style>
+        /* 保持原有的 CSS 樣式不變 */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PDF合併、排序與刪除工具</h1>
+        <label for="file-input" class="upload-btn">選擇PDF檔案</label>
+        <input type="file" id="file-input" accept=".pdf" multiple>
+        <div id="preview-container"></div>
+        <button id="merge-btn" style="display: none;">合併PDF</button>
+    </div>
+
+    <script>
+        let pdfs = [];
+
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.worker.min.js';
+
+        document.getElementById('file-input').addEventListener('change', async (e) => {
+            const files = e.target.files;
+            pdfs = [];
+            document.getElementById('preview-container').innerHTML = '';
+
+            for (let file of files) {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const typedarray = new Uint8Array(e.target.result);
+                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                    pdfs.push({file: file, pdf: pdf});
+                    
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const scale = 0.5;
+                        const viewport = page.getViewport({scale: scale});
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+                        const renderContext = {
+                            canvasContext: context,
+                            viewport: viewport
+                        };
+                        await page.render(renderContext);
+                        
+                        const previewDiv = document.createElement('div');
+                        previewDiv.className = 'preview-page';
+                        previewDiv.setAttribute('data-pdf', pdfs.length - 1);
+                        previewDiv.setAttribute('data-page', i);
+                        previewDiv.appendChild(canvas);
+
+                        const pageNumber = document.createElement('div');
+                        pageNumber.className = 'page-number';
+                        pageNumber.textContent = `Page ${i}`;
+                        previewDiv.appendChild(pageNumber);
+
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'delete-btn';
+                        deleteBtn.textContent = 'X';
+                        deleteBtn.onclick = function() {
+                            previewDiv.remove();
+                            updatePageNumbers();
+                        };
+                        previewDiv.appendChild(deleteBtn);
+
+                        document.getElementById('preview-container').appendChild(previewDiv);
+                    }
+
+                    if (pdfs.length === files.length) {
+                        new Sortable(document.getElementById('preview-container'), {
+                            animation: 150,
+                            ghostClass: 'blue-background-class',
+                            onSort: updatePageNumbers
+                        });
+                        document.getElementById('merge-btn').style.display = 'block';
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        });
+
+        function updatePageNumbers() {
+            const pages = document.querySelectorAll('.preview-page');
+            pages.forEach((page, index) => {
+                page.querySelector('.page-number').textContent = `Page ${index + 1}`;
+            });
+        }
+
+        document.getElementById('merge-btn').addEventListener('click', async () => {
+            const { jsPDF } = window.jspdf;
+            const mergedPdf = new jsPDF();
+            
+            const previewPages = document.querySelectorAll('.preview-page');
+            for (let i = 0; i < previewPages.length; i++) {
+                const previewPage = previewPages[i];
+                const pdfIndex = previewPage.getAttribute('data-pdf');
+                const pageNum = previewPage.getAttribute('data-page');
+                const pdf = pdfs[pdfIndex].pdf;
+                const page = await pdf.getPage(parseInt(pageNum));
+                
+                const scale = 2; // 增加清晰度
+                const viewport = page.getViewport({ scale: scale });
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+
+                if (i > 0) {
+                    mergedPdf.addPage();
+                }
+
+                mergedPdf.addImage(
+                    canvas.toDataURL('image/jpeg', 1.0),
+                    'JPEG',
+                    0,
+                    0,
+                    mergedPdf.internal.pageSize.getWidth(),
+                    mergedPdf.internal.pageSize.getHeight(),
+                    '',
+                    'FAST'
+                );
+            }
+
+            mergedPdf.save('merged.pdf');
+        });
+    </script>
+</body>
+</html>
