@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三角棋遊戲</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        select, button, input[type="color"] {
+            font-size: 16px;
+            padding: 5px 10px;
+            margin: 0 5px;
+        }
+        #gameBoard {
+            display: inline-block;
+            margin-top: 20px;
+        }
+        .piece {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .piece:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+        .piece.selected {
+            opacity: 0.7;
+        }
+        .piece.removed {
+            transform: scale(0.8);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        #gameInfo, #scoreBoard {
+            margin-top: 20px;
+        }
+        #rules {
+            text-align: left;
+            margin-top: 20px;
+            display: none;
+        }
+        #nextTurn, #restartGame {
+            font-size: 16px;
+            padding: 5px 10px;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>三角棋遊戲</h1>
+        <div class="controls">
+            <label for="boardSize">選擇邊長：</label>
+            <select id="boardSize">
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+            </select>
+            <label for="gameMode">遊戲模式：</label>
+            <select id="gameMode">
+                <option value="pvp">雙人對戰</option>
+                <option value="pvc">對戰AI</option>
+            </select>
+            <label for="player1Color">玩家1顏色：</label>
+            <input type="color" id="player1Color" value="#007bff">
+            <label for="player2Color">玩家2顏色：</label>
+            <input type="color" id="player2Color" value="#28a745">
+            <button id="startGame">開始遊戲</button>
+            <button id="showRules">遊戲規則</button>
+        </div>
+        <div id="gameInfo">
+            <p>當前玩家： <span id="currentPlayer">玩家1</span></p>
+        </div>
+        <div id="gameBoard"></div>
+        <button id="nextTurn">換下家</button>
+        <button id="restartGame">重新開始</button>
+        <div id="scoreBoard">
+            <p>玩家1得分： <span id="player1Score">0</span></p>
+            <p>玩家2得分： <span id="player2Score">0</span></p>
+        </div>
+        <div id="rules">
+            <h2>遊戲規則</h2>
+            <ol>
+                <li>遊戲開始時，棋盤上擺放成三角形的棋子。</li>
+                <li>兩名玩家輪流行動。</li>
+                <li>每次行動可以取走1枚、2枚或3枚相連成一直線的棋子。</li>
+                <li>取走最後一枚棋子的玩家輸掉遊戲。</li>
+                <li>獲勝玩家得1分。</li>
+                <li>首先達到3分的玩家贏得整個比賽。</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const DEFAULT_PLAYER1_COLOR = '#007bff';
+        const DEFAULT_PLAYER2_COLOR = '#28a745';
+        let currentPlayer = 1;
+        let boardSize = 3;
+        let gameBoard = [];
+        let gameMode = 'pvp';
+        let scores = [0, 0];
+        let player1Color = DEFAULT_PLAYER1_COLOR;
+        let player2Color = DEFAULT_PLAYER2_COLOR;
+
+        const gameBoardElement = document.getElementById('gameBoard');
+        const currentPlayerElement = document.getElementById('currentPlayer');
+        const startGameButton = document.getElementById('startGame');
+        const showRulesButton = document.getElementById('showRules');
+        const boardSizeSelect = document.getElementById('boardSize');
+        const gameModeSelect = document.getElementById('gameMode');
+        const player1ScoreElement = document.getElementById('player1Score');
+        const player2ScoreElement = document.getElementById('player2Score');
+        const rulesElement = document.getElementById('rules');
+        const nextTurnButton = document.getElementById('nextTurn');
+        const restartGameButton = document.getElementById('restartGame');
+        const player1ColorInput = document.getElementById('player1Color');
+        const player2ColorInput = document.getElementById('player2Color');
+
+        startGameButton.addEventListener('click', startGame);
+        showRulesButton.addEventListener('click', toggleRules);
+        nextTurnButton.addEventListener('click', nextTurn);
+        restartGameButton.addEventListener('click', restartGame);
+
+        player1ColorInput.addEventListener('change', (e) => {
+            const newColor = e.target.value;
+            if (newColor === DEFAULT_PLAYER1_COLOR) {
+                alert("請選擇一個不同於預設的顏色！");
+                e.target.value = player1Color;
+            } else if (newColor === player2Color) {
+                alert("請選擇一個不同於玩家2的顏色！");
+                e.target.value = player1Color;
+            } else {
+                player1Color = newColor;
+                updatePieceColors();
+            }
+        });
+
+        player2ColorInput.addEventListener('change', (e) => {
+            const newColor = e.target.value;
+            if (newColor === DEFAULT_PLAYER2_COLOR) {
+                alert("請選擇一個不同於預設的顏色！");
+                e.target.value = player2Color;
+            } else if (newColor === player1Color) {
+                alert("請選擇一個不同於玩家1的顏色！");
+                e.target.value = player2Color;
+            } else {
+                player2Color = newColor;
+                updatePieceColors();
+            }
+        });
+
+        function startGame() {
+            boardSize = parseInt(boardSizeSelect.value);
+            gameMode = gameModeSelect.value;
+            currentPlayer = 1;
+            gameBoard = [];
+            gameBoardElement.innerHTML = '';
+            currentPlayerElement.textContent = `玩家${currentPlayer}`;
+
+            // 重置顏色選擇器
+            player1ColorInput.value = player1Color;
+            player2ColorInput.value = player2Color;
+
+            for (let i = 0; i < boardSize; i++) {
+                for (let j = 0; j <= i; j++) {
+                    const piece = document.createElement('div');
+                    piece.className = 'piece';
+                    piece.dataset.row = i;
+                    piece.dataset.col = j;
+                    piece.addEventListener('click', () => selectPiece(piece));
+                    gameBoardElement.appendChild(piece);
+                }
+                gameBoardElement.appendChild(document.createElement('br'));
+            }
+            nextTurnButton.style.display = 'inline-block';
+            restartGameButton.style.display = 'inline-block';
+            updatePieceColors();
+        }
+
+        function restartGame() {
+            scores = [0, 0];
+            player1ScoreElement.textContent = 0;
+            player2ScoreElement.textContent = 0;
+            startGame();
+        }
+
+        function updatePieceColors() {
+            const pieces = document.querySelectorAll('.piece:not(.removed)');
+            pieces.forEach(piece => {
+                piece.style.backgroundColor = currentPlayer === 1 ? player1Color : player2Color;
+            });
+        }
+
+        function selectPiece(piece) {
+            if (piece.classList.contains('removed')) {
+                return;
+            }
+
+            const selectedPieces = document.querySelectorAll('.piece.selected');
+            if (selectedPieces.length === 0) {
+                piece.classList.add('selected');
+            } else if (selectedPieces.length < 3) {
+                if (isAdjacent(selectedPieces[selectedPieces.length - 1], piece) && 
+                    (selectedPieces.length === 1 || isInLine(selectedPieces[0], selectedPieces[1], piece))) {
+                    piece.classList.add('selected');
+                } else {
+                    selectedPieces.forEach(p => p.classList.remove('selected'));
+                    piece.classList.add('selected');
+                }
+            } else {
+                selectedPieces.forEach(p => p.classList.remove('selected'));
+                piece.classList.add('selected');
+            }
+        }
+
+        function isAdjacent(piece1, piece2) {
+            const row1 = parseInt(piece1.dataset.row);
+            const col1 = parseInt(piece1.dataset.col);
+            const row2 = parseInt(piece2.dataset.row);
+            const col2 = parseInt(piece2.dataset.col);
+
+            return Math.abs(row1 - row2) <= 1 && Math.abs(col1 - col2) <= 1;
+        }
+
+        function isInLine(...pieces) {
+            if (pieces.length < 2) return true;
+            const rows = pieces.map(p => parseInt(p.dataset.row));
+            const cols = pieces.map(p => parseInt(p.dataset.col));
+
+            return rows.every(r => r === rows[0]) ||
+                   cols.every(c => c === cols[0]) ||
+                   pieces.every((p, i) => i === 0 || 
+                       (parseInt(p.dataset.row) - parseInt(p.dataset.col) === 
+                        parseInt(pieces[0].dataset.row) - parseInt(pieces[0].dataset.col)));
+        }
+
+        function nextTurn() {
+            const selectedPieces = document.querySelectorAll('.piece.selected');
+            if (selectedPieces.length === 0) {
+                alert("請至少選擇一個棋子");
+                return;
+            }
+            if (selectedPieces.length > 3) {
+                alert("最多只能選擇3個棋子");
+                return;
+            }
+            if (!isInLine(...selectedPieces)) {
+                alert("選擇的棋子必須在一條直線上");
+                return;
+            }
+
+            removePieces();
+            if (isGameOver()) {
+                updateScore();
+                if (Math.max(...scores) >= 3) {
+                    alert(`玩家${scores[0] > scores[1] ? 1 : 2}贏得比賽！`);
+                    resetScores();
+                } else {
+                    alert(`玩家${currentPlayer}輸掉這局！`);
+                }
+                startGame();
+            } else {
+                switchPlayer();
+                if (gameMode === 'pvc' && currentPlayer === 2) {
+                    nextTurnButton.disabled = true;
+                    setTimeout(() => {
+                        aiMove();
+                        nextTurn();
+                        nextTurnButton.disabled = false;
+                    }, 1000);
+                }
+            }
+        }
+
+        function removePieces() {
+            const selectedPieces = document.querySelectorAll('.piece.selected');
+            selectedPieces.forEach(piece => {
+                piece.classList.remove('selected');
+                piece.classList.add('removed');
+            });
+        }
+
+        function switchPlayer() {
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+            currentPlayerElement.textContent = `玩家${currentPlayer}`;
+            updatePieceColors();
+        }
+
+        function isGameOver() {
+            return document.querySelectorAll('.piece:not(.removed)').length === 0;
+        }
+
+        function updateScore() {
+            scores[currentPlayer === 1 ? 1 : 0]++;
+            player1ScoreElement.textContent = scores[0];
+            player2ScoreElement.textContent = scores[1];
+        }
+
+        function resetScores() {
+            scores = [0, 0];
+            player1ScoreElement.textContent = 0;
+            player2ScoreElement.textContent = 0;
+        }
+
+        function toggleRules() {
+            rulesElement.style.display = rulesElement.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function aiMove() {
+            const availablePieces = Array.from(document.querySelectorAll('.piece:not(.removed)'));
+            const move = minimax(availablePieces, 3, true);
+            move.forEach(piece => selectPiece(piece));
+        }
+
+        function minimax(pieces, depth, isMaximizing) {
+            if (depth === 0 || pieces.length === 0) {
+                return isMaximizing ? [] : pieces;
+            }
+
+            const possibleMoves = [];
+            for (let i = 1; i <= 3; i++) {
+                for (let j = 0; j < pieces.length - i + 1; j++) {
+                    const move = pieces.slice(j, j + i);
+                    if (isInLine(...move)) {
+                        possibleMoves.push(move);
+                    }
+                }
+            }
+
+            if (isMaximizing) {
+                let bestMove = [];
+                let bestScore = -Infinity;
+                for (const move of possibleMoves) {
+                    const score = minimax(pieces.filter(p => !move.includes(p)), depth - 1, false).length;
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMove = move;
+                    }
+                }
+                return bestMove;
+            } else {
+                let worstMove = pieces;
+                let worstScore = Infinity;
+                for (const move of possibleMoves) {
+                    const score = minimax(pieces.filter(p => !move.includes(p)), depth - 1, true).length;
+                    if (score < worstScore) {
+                        worstScore = score;
+                        worstMove = move;
+                    }
+                }
+                return worstMove;
+            }
+        }
+
+        startGame();
+    </script>
+</body>
+</html>
