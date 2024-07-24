@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>井字旗遊戲</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .game-container {
+            text-align: center;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-gap: 5px;
+            margin-top: 20px;
+            position: relative;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            font-size: 2em;
+            font-weight: bold;
+            background-color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .cell:hover {
+            background-color: #e0e0e0;
+        }
+        .cell.X {
+            color: #FF4136; /* 紅色 */
+        }
+        .cell.O {
+            color: #0074D9; /* 藍色 */
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #player-select {
+            margin-top: 20px;
+        }
+        .winning-line {
+            position: absolute;
+            background-color: #FFD700; /* 金色 */
+            transition: width 0.5s ease-in-out, height 0.5s ease-in-out, transform 0.5s ease-in-out;
+            animation: flash 1s infinite;
+        }
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>井字旗遊戲</h1>
+        <div id="player-select">
+            <p>選擇先手:</p>
+            <button id="select-x">X</button>
+            <button id="select-o">O</button>
+        </div>
+        <div class="board" id="board">
+            <button class="cell" data-cell></button>
+            <button class="cell" data-cell></button>
+            <button class="cell" data-cell></button>
+            <button class="cell" data-cell></button>
+            <button class="cell" data-cell></button>
+            <button class="cell" data-cell></button>
+            <button class="cell" data-cell></button>
+            <button class="cell" data-cell></button>
+            <button class="cell" data-cell></button>
+            <div class="winning-line" id="winning-line"></div>
+        </div>
+        <div id="status"></div>
+        <button id="restart">重新開始</button>
+    </div>
+
+    <script>
+        const X_CLASS = 'X';
+        const O_CLASS = 'O';
+        const WINNING_COMBINATIONS = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ];
+
+        const cellElements = document.querySelectorAll('[data-cell]');
+        const board = document.getElementById('board');
+        const statusElement = document.getElementById('status');
+        const restartButton = document.getElementById('restart');
+        const selectXButton = document.getElementById('select-x');
+        const selectOButton = document.getElementById('select-o');
+        const playerSelectDiv = document.getElementById('player-select');
+        const winningLineElement = document.getElementById('winning-line');
+        let isOTurn;
+
+        selectXButton.addEventListener('click', () => startGame(false));
+        selectOButton.addEventListener('click', () => startGame(true));
+        restartButton.addEventListener('click', () => {
+            playerSelectDiv.style.display = 'block';
+            board.style.display = 'none';
+            statusElement.textContent = '';
+            restartButton.style.display = 'none';
+            winningLineElement.style.width = '0';
+            winningLineElement.style.height = '0';
+        });
+
+        function startGame(startWithO) {
+            isOTurn = startWithO;
+            playerSelectDiv.style.display = 'none';
+            board.style.display = 'grid';
+            restartButton.style.display = 'inline-block';
+            cellElements.forEach(cell => {
+                cell.classList.remove(X_CLASS);
+                cell.classList.remove(O_CLASS);
+                cell.removeEventListener('click', handleClick);
+                cell.addEventListener('click', handleClick, { once: true });
+                cell.textContent = '';
+            });
+            setBoardHoverClass();
+            statusElement.textContent = `${isOTurn ? 'O' : 'X'} 的回合`;
+            winningLineElement.style.width = '0';
+            winningLineElement.style.height = '0';
+        }
+
+        function handleClick(e) {
+            const cell = e.target;
+            const currentClass = isOTurn ? O_CLASS : X_CLASS;
+            placeMark(cell, currentClass);
+            if (checkWin(currentClass)) {
+                endGame(false);
+            } else if (isDraw()) {
+                endGame(true);
+            } else {
+                swapTurns();
+                setBoardHoverClass();
+            }
+        }
+
+        function placeMark(cell, currentClass) {
+            cell.classList.add(currentClass);
+            cell.textContent = currentClass;
+        }
+
+        function swapTurns() {
+            isOTurn = !isOTurn;
+            statusElement.textContent = `${isOTurn ? 'O' : 'X'} 的回合`;
+        }
+
+        function setBoardHoverClass() {
+            board.classList.remove(X_CLASS);
+            board.classList.remove(O_CLASS);
+            board.classList.add(isOTurn ? O_CLASS : X_CLASS);
+        }
+
+        function checkWin(currentClass) {
+            return WINNING_COMBINATIONS.some(combination => {
+                if (combination.every(index => {
+                    return cellElements[index].classList.contains(currentClass);
+                })) {
+                    drawWinningLine(combination);
+                    return true;
+                }
+                return false;
+            });
+        }
+
+        function isDraw() {
+            return [...cellElements].every(cell => {
+                return cell.classList.contains(X_CLASS) || cell.classList.contains(O_CLASS);
+            });
+        }
+
+        function endGame(draw) {
+            if (draw) {
+                statusElement.textContent = '平局！';
+            } else {
+                statusElement.textContent = `${isOTurn ? 'O' : 'X'} 獲勝！`;
+            }
+            cellElements.forEach(cell => {
+                cell.removeEventListener('click', handleClick);
+            });
+        }
+
+        function drawWinningLine(combination) {
+            const startCell = cellElements[combination[0]];
+            const endCell = cellElements[combination[2]];
+            const startRect = startCell.getBoundingClientRect();
+            const endRect = endCell.getBoundingClientRect();
+            const boardRect = board.getBoundingClientRect();
+
+            const lineWidth = 5;
+            let width, height, left, top, angle;
+
+            if (combination[0] % 3 === combination[2] % 3) {
+                // 垂直線
+                width = lineWidth;
+                height = endRect.bottom - startRect.top;
+                left = (startRect.left + startRect.right) / 2 - boardRect.left - lineWidth / 2;
+                top = startRect.top - boardRect.top;
+                angle = 0;
+            } else if (Math.floor(combination[0] / 3) === Math.floor(combination[2] / 3)) {
+                // 水平線
+                width = endRect.right - startRect.left;
+                height = lineWidth;
+                left = startRect.left - boardRect.left;
+                top = (startRect.top + startRect.bottom) / 2 - boardRect.top - lineWidth / 2;
+                angle = 0;
+            } else {
+                // 對角線
+                width = Math.sqrt(Math.pow(endRect.right - startRect.left, 2) + Math.pow(endRect.bottom - startRect.top, 2));
+                height = lineWidth;
+                left = startRect.left - boardRect.left;
+                top = startRect.top - boardRect.top;
+                if (combination[0] === 0) {
+                    angle = 45;
+                } else {
+                    angle = -45;
+                    left += 100; // 調整起始位置
+                }
+            }
+
+            winningLineElement.style.width = `${width}px`;
+            winningLineElement.style.height = `${height}px`;
+            winningLineElement.style.left = `${left}px`;
+            winningLineElement.style.top = `${top}px`;
+            winningLineElement.style.transform = `rotate(${angle}deg)`;
+            winningLineElement.style.transformOrigin = 'top left';
+        }
+
+        // 初始化遊戲
+        playerSelectDiv.style.display = 'block';
+        board.style.display = 'none';
+        restartButton.style.display = 'none';
+    </script>
+</body>
+</html>
