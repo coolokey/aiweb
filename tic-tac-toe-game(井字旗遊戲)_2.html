@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>井字旗小遊戲</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-gap: 5px;
+            margin-top: 20px;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: #fff;
+            border: 2px solid #333;
+            font-size: 2em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .cell:hover {
+            background-color: #eee;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        @keyframes winAnimation {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        .win-animation {
+            animation: winAnimation 1s ease-in-out 3;
+        }
+        .symbol-X {
+            color: #FF5733;
+        }
+        .symbol-O {
+            color: #3498DB;
+        }
+        #symbolChoice {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>井字旗小遊戲</h1>
+        <div id="symbolChoice">
+            <p>第一位玩家，請選擇你的符號：</p>
+            <button id="chooseX">選擇 X</button>
+            <button id="chooseO">選擇 O</button>
+        </div>
+        <div class="board" id="board" style="display: none;">
+            <div class="cell" data-cell-index="0"></div>
+            <div class="cell" data-cell-index="1"></div>
+            <div class="cell" data-cell-index="2"></div>
+            <div class="cell" data-cell-index="3"></div>
+            <div class="cell" data-cell-index="4"></div>
+            <div class="cell" data-cell-index="5"></div>
+            <div class="cell" data-cell-index="6"></div>
+            <div class="cell" data-cell-index="7"></div>
+            <div class="cell" data-cell-index="8"></div>
+        </div>
+        <div id="status"></div>
+        <button id="restart" style="display: none;">重新開始</button>
+    </div>
+
+    <script>
+        const board = document.getElementById('board');
+        const cells = document.querySelectorAll('.cell');
+        const status = document.getElementById('status');
+        const restartButton = document.getElementById('restart');
+        const symbolChoice = document.getElementById('symbolChoice');
+        const chooseXButton = document.getElementById('chooseX');
+        const chooseOButton = document.getElementById('chooseO');
+        let currentPlayer = 'X';
+        let gameState = ['', '', '', '', '', '', '', '', ''];
+        let gameActive = false;
+
+        const winningConditions = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ];
+
+        function startGame(firstPlayerSymbol) {
+            currentPlayer = firstPlayerSymbol;
+            gameActive = true;
+            symbolChoice.style.display = 'none';
+            board.style.display = 'grid';
+            restartButton.style.display = 'inline-block';
+            status.textContent = `輪到玩家 ${currentPlayer}`;
+        }
+
+        chooseXButton.addEventListener('click', () => startGame('X'));
+        chooseOButton.addEventListener('click', () => startGame('O'));
+
+        function handleCellClick(clickedCellEvent) {
+            const clickedCell = clickedCellEvent.target;
+            const clickedCellIndex = parseInt(clickedCell.getAttribute('data-cell-index'));
+
+            if (gameState[clickedCellIndex] !== '' || !gameActive) {
+                return;
+            }
+
+            gameState[clickedCellIndex] = currentPlayer;
+            clickedCell.textContent = currentPlayer;
+            clickedCell.classList.add(`symbol-${currentPlayer}`);
+            checkResult();
+        }
+
+        function checkResult() {
+            let roundWon = false;
+            let winningLine;
+            for (let i = 0; i < winningConditions.length; i++) {
+                const [a, b, c] = winningConditions[i];
+                if (gameState[a] && gameState[a] === gameState[b] && gameState[a] === gameState[c]) {
+                    roundWon = true;
+                    winningLine = [a, b, c];
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                gameActive = false;
+                animateWinningCells(winningLine);
+                setTimeout(() => {
+                    status.textContent = `玩家 ${currentPlayer} 獲勝！`;
+                }, 3000);
+                return;
+            }
+
+            if (!gameState.includes('')) {
+                status.textContent = '平局！';
+                gameActive = false;
+                return;
+            }
+
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            status.textContent = `輪到玩家 ${currentPlayer}`;
+        }
+
+        function animateWinningCells(winningLine) {
+            winningLine.forEach(index => {
+                cells[index].classList.add('win-animation');
+            });
+            
+            setTimeout(() => {
+                winningLine.forEach(index => {
+                    cells[index].classList.remove('win-animation');
+                });
+            }, 3000);
+        }
+
+        function restartGame() {
+            gameState = ['', '', '', '', '', '', '', '', ''];
+            gameActive = false;
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.classList.remove('win-animation', 'symbol-X', 'symbol-O');
+            });
+            symbolChoice.style.display = 'block';
+            board.style.display = 'none';
+            restartButton.style.display = 'none';
+            status.textContent = '';
+        }
+
+        cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+        restartButton.addEventListener('click', restartGame);
+    </script>
+</body>
+</html>
