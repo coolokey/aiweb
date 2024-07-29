@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網址工具</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        input, button, select {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #qrcode {
+            text-align: center;
+            margin-top: 1rem;
+        }
+        #shortenedUrl {
+            word-break: break-all;
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+        .color-picker {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .color-picker label {
+            margin-right: 1rem;
+        }
+        #qrColor {
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>網址工具</h1>
+        <input type="url" id="urlInput" placeholder="輸入網址" required>
+        <button id="generateQr">生成QR碼</button>
+        <div class="color-picker">
+            <label for="qrColor">QR碼顏色：</label>
+            <input type="color" id="qrColor" value="#000000">
+        </div>
+        <button id="shortenUrl">縮短網址</button>
+        <button id="copyUrl">複製縮短網址</button>
+        <div id="qrcode"></div>
+        <div id="shortenedUrl"></div>
+    </div>
+
+    <script>
+        const urlInput = document.getElementById('urlInput');
+        const generateQrBtn = document.getElementById('generateQr');
+        const qrColorInput = document.getElementById('qrColor');
+        const shortenUrlBtn = document.getElementById('shortenUrl');
+        const copyUrlBtn = document.getElementById('copyUrl');
+        const qrcodeDiv = document.getElementById('qrcode');
+        const shortenedUrlDiv = document.getElementById('shortenedUrl');
+
+        let qr = null;
+
+        function generateQRCode() {
+            const url = urlInput.value;
+            const color = qrColorInput.value;
+            
+            if (url) {
+                qrcodeDiv.innerHTML = '';
+                qr = new QRCode(qrcodeDiv, {
+                    text: url,
+                    width: 128,
+                    height: 128,
+                    colorDark: color,
+                    colorLight: "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+            }
+        }
+
+        generateQrBtn.addEventListener('click', generateQRCode);
+
+        qrColorInput.addEventListener('input', () => {
+            if (qr) {
+                generateQRCode();
+            }
+        });
+
+        function shortenUrl(url) {
+            // 這裡應該是實際的URL縮短邏輯，這裡我們只是模擬
+            return 'http://short.url/' + Math.random().toString(36).substr(2, 5);
+        }
+
+        shortenUrlBtn.addEventListener('click', () => {
+            const url = urlInput.value;
+            if (url) {
+                const shortened = shortenUrl(url);
+                shortenedUrlDiv.textContent = shortened;
+            }
+        });
+
+        copyUrlBtn.addEventListener('click', () => {
+            const shortened = shortenedUrlDiv.textContent;
+            if (shortened) {
+                navigator.clipboard.writeText(shortened).then(() => {
+                    alert('縮短的網址已複製到剪貼板！');
+                }).catch(err => {
+                    console.error('無法複製文本: ', err);
+                    alert('複製失敗，請手動複製。');
+                });
+            } else {
+                alert('請先縮短網址。');
+            }
+        });
+    </script>
+</body>
+</html>
