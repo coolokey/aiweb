@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>檔案上傳和列表工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #3498db; /* Cornflower blue */
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50; /* Midnight blue */
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #8e44ad; /* Amethyst */
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #9b59b6; /* Lighter amethyst */
+        }
+        #fileList {
+            margin-top: 20px;
+        }
+        #uploadStatus, #totalFiles {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #2c3e50; /* Midnight blue */
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid #bdc3c7;
+        }
+        .file-item button {
+            background-color: #e74c3c; /* Alizarin */
+            padding: 5px 10px;
+            font-size: 0.8em;
+        }
+        .file-item button:hover {
+            background-color: #c0392b; /* Darker alizarin */
+        }
+        #exportOptions {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>檔案上傳和列表工具</h1>
+        <div id="exportOptions">
+            <button onclick="exportToCSV(false)">導出為 CSV（不含副檔名）</button>
+            <button onclick="exportToCSV(true)">導出為 CSV（含副檔名）</button>
+        </div>
+        <input type="file" id="fileInput" multiple>
+        <button onclick="addFiles()">添加檔案</button>
+        <div id="uploadStatus"></div>
+        <div id="totalFiles"></div>
+        <div id="fileList"></div>
+    </div>
+
+    <script>
+        let files = [];
+
+        function addFiles() {
+            const fileInput = document.getElementById('fileInput');
+            const newFiles = Array.from(fileInput.files);
+            
+            if (newFiles.length === 0) {
+                alert('請選擇至少一個檔案');
+                return;
+            }
+
+            files = [...files, ...newFiles];
+            updateFileList();
+            document.getElementById('uploadStatus').textContent = `成功添加 ${newFiles.length} 個檔案`;
+            fileInput.value = '';
+            updateTotalFiles();
+        }
+
+        function removeFile(index) {
+            files.splice(index, 1);
+            updateFileList();
+            updateTotalFiles();
+        }
+
+        function updateFileList() {
+            const fileListElement = document.getElementById('fileList');
+            if (files.length === 0) {
+                fileListElement.innerHTML = '<p>沒有檔案</p>';
+                return;
+            }
+
+            const fileListHTML = files.map((file, index) => `
+                <div class="file-item">
+                    <span>${file.name} (${formatFileSize(file.size)})</span>
+                    <button onclick="removeFile(${index})">移除</button>
+                </div>
+            `).join('');
+
+            fileListElement.innerHTML = fileListHTML;
+        }
+
+        function updateTotalFiles() {
+            const totalFilesElement = document.getElementById('totalFiles');
+            totalFilesElement.textContent = `總計: ${files.length} 個檔案`;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function exportToCSV(includeExtension) {
+            if (files.length === 0) {
+                alert('沒有檔案可以導出');
+                return;
+            }
+
+            let csvContent = "\uFEFF檔案名稱\n";
+            
+            files.forEach(file => {
+                let fileName = file.name;
+                if (!includeExtension) {
+                    fileName = fileName.split('.').slice(0, -1).join('.') || fileName;
+                }
+                csvContent += fileName + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", "file_list.csv");
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        updateFileList();
+        updateTotalFiles();
+    </script>
+</body>
+</html>
