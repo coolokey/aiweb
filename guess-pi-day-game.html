@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>國際數學日猜謎遊戲</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <style>
+        body {
+            background-color: #f0f4f8;
+            font-family: 'Microsoft JhengHei', sans-serif;
+        }
+        .container {
+            max-width: 600px;
+        }
+        .title {
+            color: #2c5282;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            transform: scale(1.05);
+        }
+        .btn {
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .result {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .result.show {
+            opacity: 1;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+        }
+    </style>
+</head>
+<body class="bg-blue-100">
+    <div class="container mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg">
+        <h1 class="title text-3xl font-bold mb-6 text-center">國際數學日猜謎遊戲</h1>
+        <p class="mb-4 text-center text-gray-700">提示：國際數學日(四碼)</p>
+        <div class="mb-4">
+            <input type="text" id="guess" class="input-field w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500" placeholder="請輸入您的答案">
+        </div>
+        <button id="submit" class="btn w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 focus:outline-none">提交答案</button>
+        <p id="result" class="result mt-4 text-center font-bold"></p>
+    </div>
+
+    <div id="myModal" class="modal">
+        <div class="modal-content rounded-lg">
+            <h2 class="text-xl font-bold mb-4">下載提醒</h2>
+            <p class="mb-4">請注意：此連結中的內容僅限大溪國民中學的教職員下載使用。</p>
+            <p class="mb-4">如果您不是大溪國民中學的教職員，請勿下載或分享此內容。</p>
+            <div class="flex justify-end">
+                <button id="modalClose" class="btn bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600 focus:outline-none mr-2">關閉</button>
+                <button id="modalConfirm" class="btn bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none">確認並繼續</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const correctAnswer = "0314";
+        const sheet_url = "https://docs.google.com/spreadsheets/d/1HJAyjoj_TdqKOnpP0g-CakyIbV52m6Gl/edit?usp=sharing&ouid=106142958928766037831&rtpof=true&sd=true";
+        
+        document.getElementById('submit').addEventListener('click', checkAnswer);
+        document.getElementById('guess').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+
+        function checkAnswer() {
+            const guess = document.getElementById('guess').value;
+            const result = document.getElementById('result');
+            
+            if (guess === correctAnswer) {
+                result.textContent = "恭喜你答對了！";
+                result.classList.add('text-green-500', 'show');
+                showModal();
+            } else {
+                result.textContent = "答錯了，請再試一次！";
+                result.classList.add('text-red-500', 'show');
+                setTimeout(() => {
+                    result.classList.remove('show');
+                }, 2000);
+            }
+        }
+
+        function showModal() {
+            document.getElementById('myModal').style.display = "block";
+        }
+
+        document.getElementById('modalClose').onclick = function() {
+            document.getElementById('myModal').style.display = "none";
+        }
+
+        document.getElementById('modalConfirm').onclick = function() {
+            window.location.href = sheet_url;
+        }
+
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('myModal')) {
+                document.getElementById('myModal').style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
