@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猜謎工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .images {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .images div {
+            position: relative;
+            margin: 0 10px;
+            text-align: center;
+        }
+        .images img {
+            width: 200px;
+            height: auto;
+            border: 2px solid #555;
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+        .label {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+        .input-group {
+            margin-top: 20px;
+        }
+        .input-group input {
+            padding: 10px;
+            width: 150px;
+            font-size: 16px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+        }
+        .input-group button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .input-group button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #333;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>猜謎工具</h1>
+        <div class="images">
+            <div>
+                <img src="http://coolokey.synology.me/registration/uploads/tad_uploader/tmp/661/1130908---1.jpg" alt="第一張圖">
+                <div class="label">第一張圖</div>
+            </div>
+            <div>
+                <img src="http://coolokey.synology.me/registration/uploads/tad_uploader/tmp/660/1130908---2.jpg" alt="第二張圖">
+                <div class="label">第二張圖</div>
+            </div>
+        </div>
+        <div class="input-group">
+            <input type="text" id="answer" placeholder="輸入四位數答案">
+            <button onclick="checkAnswer()">確認答案</button>
+        </div>
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        function checkAnswer() {
+            const answer = document.getElementById('answer').value;
+            const result = document.getElementById('result');
+            if (answer === '5812') {
+                result.innerHTML = `
+                    <a href="https://docs.google.com/spreadsheets/d/1d5rDMkh-y8-nenBp_yU0l_CupGPwBJl3/edit?usp=sharing&ouid=106142958928766037831&rtpof=true&sd=true" target="_blank">
+                        謎底正確！點擊此處下載文件
+                    </a>
+                    <p>此連結限制「大溪國民中學教職員」始可下載使用，並請妥善保留，勿外流。</p>
+                `;
+                result.classList.remove('error');
+            } else {
+                result.innerHTML = '答案錯誤，請再試一次。';
+                result.classList.add('error');
+            }
+        }
+    </script>
+</body>
+</html>
