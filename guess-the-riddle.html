@@ -23,6 +23,11 @@
       border: 2px solid #000; /* 為圖片加上邊框 */
     }
     
+    .image-container .image-label {
+      font-size: 14px;
+      margin-top: 5px;
+    }
+    
     input {
       padding: 10px;
       font-size: 16px;
@@ -40,11 +45,17 @@
   </style>
 </head>
 <body>
-  <h1>猜謎遊戲</h1>
+  <h2>這是兩張成語圖片</h2>
   
   <div class="image-container">
-    <img src="https://img.shoplineapp.com/media/image_clips/615e9c07858a72001b42609f/original.PNG?1633590277" alt="圖片 1">
-    <img src="https://img.shoplineapp.com/media/image_clips/615e9c07b1ccef3ba12ce913/original.PNG?1633590278" alt="圖片 2">
+    <div>
+      <img src="https://img.shoplineapp.com/media/image_clips/615e9c07858a72001b42609f/original.PNG?1633590277" alt="圖片 1">
+      <div class="image-label">第一張圖片有4個數字</div>
+    </div>
+    <div>
+      <img src="https://img.shoplineapp.com/media/image_clips/615e9c07b1ccef3ba12ce913/original.PNG?1633590278" alt="圖片 2">
+      <div class="image-label">第二張圖片有2個數字</div>
+    </div>
   </div>
   
   <p>謎語的答案是隱藏在這兩張圖片中的6位數字。</p>
