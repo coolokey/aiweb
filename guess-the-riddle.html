@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>猜謎遊戲</title>
+  <style>
+    /* 基本樣式設置 */
+    body {
+      font-family: "Microsoft JhengHei", sans-serif;
+      text-align: center;
+      margin: 50px;
+    }
+    
+    .image-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    
+    .image-container img {
+      width: 300px;
+      height: 300px;
+      margin: 0 10px;
+      border: 2px solid #000; /* 為圖片加上邊框 */
+    }
+    
+    input {
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>猜謎遊戲</h1>
+  
+  <div class="image-container">
+    <img src="https://img.shoplineapp.com/media/image_clips/615e9c07858a72001b42609f/original.PNG?1633590277" alt="圖片 1">
+    <img src="https://img.shoplineapp.com/media/image_clips/615e9c07b1ccef3ba12ce913/original.PNG?1633590278" alt="圖片 2">
+  </div>
+  
+  <p>謎語的答案是隱藏在這兩張圖片中的6位數字。</p>
+  
+  <input type="text" id="answerInput" placeholder="請輸入答案">
+  <button onclick="checkAnswer()">提交</button>
+  
+  <div id="resultContainer" style="display: none;">
+    <h2>恭喜你答對了!</h2>
+    <p>下面是正確答案的連結:</p>
+    <a href="https://drive.google.com/drive/folders/10HLp8uxAQUxozTEL90p0qHy4_o9HPlpn?usp=sharing">Google Drive 資料夾</a>
+    <p>這個連結只有『大溪國民中學』教職員可以使用,請妥善保管,不要外流。</p>
+  </div>
+  
+  <script>
+    function checkAnswer() {
+      var userAnswer = document.getElementById("answerInput").value;
+      
+      if (userAnswer === "101032") {
+        document.getElementById("resultContainer").style.display = "block";
+      } else {
+        alert("答案錯誤,請再試一次。");
+      }
+    }
+  </script>
+</body>
+</html>
