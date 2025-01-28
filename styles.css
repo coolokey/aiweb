@@ -1,0 +1,418 @@
+/* 全局樣式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #B22222;
+    color: #FFFFFF;
+    font-family: 'Kaiti SC', 'PingFang SC', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.5s ease;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+}
+
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+/* 標題區域 */
+.main-title {
+    font-size: 4rem;
+    font-family: 'Kaiti SC', sans-serif;
+    margin-bottom: 2rem;
+}
+
+.sub-title {
+    font-size: 1.5rem;
+    font-family: 'PingFang SC', sans-serif;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.description {
+    font-size: 1.2rem;
+    font-family: 'PingFang SC', sans-serif;
+    margin-bottom: 3rem;
+}
+
+/* 生成區域 */
+main {
+    margin: 3rem 0;
+}
+
+/* 分類標籤 */
+.category-tags {
+    margin-bottom: 2rem;
+}
+
+.tag {
+    background-color: #FFD700;
+    color: #B22222;
+    border: none;
+    padding: 0.5rem 1rem;
+    margin: 0 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'PingFang SC', sans-serif;
+    transition: all 0.2s ease;
+}
+
+.tag.active {
+    border: 2px solid #B22222;
+}
+
+/* 生成按鈕 */
+.generate-btn {
+    background-color: #FFD700;
+    color: #B22222;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 2rem;
+    transition: all 0.2s ease;
+}
+
+.generate-btn:hover {
+    background: linear-gradient(to right, #FFA500, #FFD700);
+}
+
+.generate-btn:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+}
+
+/* 文案展示框 */
+.wish-display {
+    background-color: rgba(255, 250, 205, 0.8);
+    border: 2px solid #FFD700;
+    padding: 2rem;
+    margin: 2rem auto;
+    border-radius: 8px;
+    font-family: 'PingFang SC', sans-serif;
+    font-size: 1.3rem;
+    color: #B22222;
+    cursor: pointer;
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    animation: fadeIn 0.3s ease;
+}
+
+/* 複製成功提示 */
+.copy-notification {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.5s ease;
+}
+
+.copy-notification.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 底部提示 */
+footer {
+    margin-top: 3rem;
+}
+
+.hint {
+    font-family: 'Kaiti SC', sans-serif;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+.countdown {
+    font-size: 1.1rem;
+    color: #FFD700;
+    line-height: 1.5;
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 0.8rem;
+    border-radius: 8px;
+    display: inline-block;
+    margin-top: 0.5rem;
+}
+
+/* 動畫效果 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .main-title {
+        font-size: 3rem;
+    }
+    
+    .sub-title {
+        font-size: 1.2rem;
+    }
+    
+    .description {
+        font-size: 1rem;
+    }
+    
+    .wish-display {
+        font-size: 1.1rem;
+    }
+    
+    .hint {
+        font-size: 0.9rem;
+    }
+    
+    .category-tags {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .countdown {
+        font-size: 0.9rem;
+        padding: 0.6rem;
+    }
+}
+
+/* 節日選擇下拉框 */
+.festival-select {
+    margin-bottom: 2rem;
+}
+
+.festival-dropdown {
+    background-color: #FFD700;
+    color: #B22222;
+    border: none;
+    padding: 0.8rem 2rem;
+    font-size: 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'PingFang SC', sans-serif;
+    transition: all 0.2s ease;
+    outline: none;
+    min-width: 200px;
+}
+
+.festival-dropdown:hover {
+    background: linear-gradient(to right, #FFA500, #FFD700);
+}
+
+.festival-dropdown option {
+    background-color: #FFF;
+    color: #B22222;
+    padding: 0.5rem;
+}
+
+/* 節日特定背景 */
+body.spring {
+    background: linear-gradient(135deg, #B22222 0%, #FF4500 100%);
+}
+
+body.lantern {
+    background: linear-gradient(135deg, #FF4500 0%, #FFD700 100%);
+}
+
+body.qingming {
+    background: linear-gradient(135deg, #228B22 0%, #90EE90 100%);
+}
+
+body.labor {
+    background: linear-gradient(135deg, #4169E1 0%, #87CEEB 100%);
+}
+
+body.dragon {
+    background: linear-gradient(135deg, #006400 0%, #32CD32 100%);
+}
+
+body.ghost {
+    background: linear-gradient(135deg, #483D8B 0%, #9370DB 100%);
+}
+
+body.moon {
+    background: linear-gradient(135deg, #191970 0%, #4169E1 100%);
+}
+
+body.double {
+    background: linear-gradient(135deg, #8B4513 0%, #DEB887 100%);
+}
+
+body.halloween {
+    background: linear-gradient(135deg, #FF4500 0%, #FF8C00 100%);
+}
+
+body.christmas {
+    background: linear-gradient(135deg, #006400 0%, #FF0000 100%);
+}
+
+body.newyear {
+    background: linear-gradient(135deg, #000080 0%, #4169E1 100%);
+}
+
+body.mother {
+    background: linear-gradient(135deg, #FF69B4 0%, #FFC0CB 100%);
+}
+
+body.father {
+    background: linear-gradient(135deg, #4682B4 0%, #87CEEB 100%);
+}
+
+body.children {
+    background: linear-gradient(135deg, #FF69B4 0%, #FFB6C1 100%);
+}
+
+body.youth {
+    background: linear-gradient(135deg, #4169E1 0%, #87CEEB 100%);
+}
+
+body.lover {
+    background: linear-gradient(135deg, #FF1493 0%, #FF69B4 100%);
+}
+
+body.teacher {
+    background: linear-gradient(135deg, #4B0082 0%, #9370DB 100%);
+}
+
+body.birthday {
+    background: linear-gradient(135deg, #FF69B4 0%, #FFD700 100%);
+}
+
+/* 浮動圖示容器 */
+.floating-icons {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.floating-icon {
+    position: absolute;
+    animation: float 15s linear infinite;
+    opacity: 0.6;
+    font-size: 24px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0.6;
+    }
+    100% {
+        transform: translateY(-100px) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* 節日圖示 */
+.festival-icon {
+    font-size: 3rem;
+    color: #FFD700;
+    margin-bottom: 1rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* 引號圖示 */
+.quote-icon {
+    font-size: 1.2rem;
+    color: #B22222;
+    opacity: 0.6;
+    margin: 0 10px;
+}
+
+/* 選擇圖示 */
+.select-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #B22222;
+    font-size: 1.2rem;
+}
+
+/* 修改下拉框樣式 */
+.festival-dropdown {
+    padding-left: 2.5rem !important;
+}
+
+/* 按鈕內的圖示 */
+.generate-btn i,
+.tag i {
+    margin-right: 0.5rem;
+}
+
+/* 更新其他樣式 */
+.copy-notification i {
+    margin-right: 0.5rem;
+}
+
+.countdown i {
+    margin-right: 0.5rem;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+} 
