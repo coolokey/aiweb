@@ -1,0 +1,57 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>答題頁面</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .image-container { display: flex; flex-wrap: wrap; gap: 20px; }
+        .image-box { 
+            text-align: center;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .image-number {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        img { max-width: 300px; }
+        #answer-form { margin-top: 20px; }
+        .question-text {
+            white-space: pre-wrap;  /* 保留換行和空格 */
+            line-height: 1.5;       /* 行高 */
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h2 class="question-text">極地密碼，請看圖片解出『包含四個字母的密碼』~~ 
+
+提示：請打成小寫的英文字母；注意每個箭頭上的小箭頭數量~~</h2>
+    <div class="image-container">
+
+        <div class="image-box">
+            <div class="image-number">圖片 1</div>
+            <img src="image_0.jpg" alt="題目圖片 1">
+        </div>
+
+    </div>
+    <div id="answer-form">
+        <p>請輸入答案：</p>
+        <input type="text" id="user-answer">
+        <button onclick="checkAnswer()">提交</button>
+    </div>
+    <script>
+        function checkAnswer() {
+            var userAnswer = document.getElementById('user-answer').value;
+            if (userAnswer === "open") {
+                window.location.href = 'answer.html';
+            } else {
+                alert('答案不正確，請重試！');
+            }
+        }
+    </script>
+</body>
+</html>
