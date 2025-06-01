@@ -275,12 +275,12 @@
           inp.style.fontSize = '24px';
           inp.oninput = e => {
             const v = Number(inp.value);
-            if (inp.value === '' || (PRIMES.includes(v) && v <= 100)) {
-              input[r][c] = inp.value === '' ? null : v;
-              document.getElementById('message').textContent = '';
+            if (inp.value === '') {
+              input[r][c] = null;
             } else {
-              inp.value = '';
+              input[r][c] = v;
             }
+            document.getElementById('message').textContent = '';
           };
           cellDiv.appendChild(inp);
           rowDiv.appendChild(cellDiv);
