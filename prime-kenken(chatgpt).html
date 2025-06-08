@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>灌籃高手質數算獨 KenKen</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css?family=ZCOOL+KuaiLe:400&display=swap" rel="stylesheet">
+  <style>
+    html, body { height: 100%; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg,#fff4eb 0%,#ffecb3 80%);
+      font-family: 'ZCOOL KuaiLe', 'Segoe UI', 'Arial', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .container {
+      position: relative;
+      z-index: 1;
+      background: rgba(255,255,255,0.98);
+      border-radius: 18px;
+      box-shadow: 0 6px 24px #c628281a,0 1.5px 6px #0002;
+      padding: 1.1em .5em .8em .5em;
+      margin-top: .6em;
+      width: 97vw; max-width: 540px;
+      min-height: 75vh;
+      display: flex; flex-direction: column; align-items: center;
+      border: 3px solid #c62828;
+    }
+    .title-row {
+      width: 100%;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: .1em;
+      gap: 0.9em;
+    }
+    .svg-logo {
+      width: 112px;
+      height: 42px;
+      min-width: 80px;
+      flex-shrink: 0;
+      vertical-align: middle;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 2px 8px #c6282822;
+      display: block;
+    }
+    h1 {
+      font-family: 'ZCOOL KuaiLe', cursive, sans-serif;
+      font-size: 1.26em;
+      letter-spacing: 2.5px;
+      color: #d32f2f;
+      text-shadow: 2px 3px 0 #fff, 2px 4px 12px #c6282855;
+      margin: 0;
+      line-height: 1.15;
+      word-break: keep-all;
+      display: inline-block;
+    }
+    .controls {
+      width: 100%;
+      display: flex; flex-wrap: wrap; gap: 7px;
+      justify-content: center; align-items: center;
+      margin-bottom: .4em;
+      font-size: .97em;
+    }
+    .controls label, .controls select {
+      font-size: 1em;
+      color: #c62828;
+      font-family: inherit;
+    }
+    .controls select {
+      background: #fff7f7;
+      border-radius: 5px;
+      border: 2px solid #bdbdbd;
+      padding: 2.5px 7px;
+      margin: 0 4px;
+      font-size: 0.97em;
+    }
+    .board-wrap {
+      width: 100%;
+      overflow-x: auto;
+      margin: 0;
+      padding: 0;
+      display: flex; justify-content: center;
+    }
+    .kenken-board {
+      display: inline-block;
+      margin: .6em 0 .5em 0;
+      border-radius: 13px;
+      background: #fff5eb;
+      box-shadow: 0 1.5px 8px #c6282825;
+      padding: .25em;
+      transition: box-shadow .2s;
+      position: relative;
+      z-index: 1;
+      min-width: min-content;
+    }
+    .row {
+      display: flex;
+    }
+    .cell {
+      position: relative;
+      width: 54px; height: 54px;
+      min-width: 38px; min-height: 38px;
+      background: #fff8e1;
+      border-radius: 10px;
+      margin: 2.2px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.08em;
+      font-weight: bold;
+      overflow: visible;
+      box-sizing: border-box;
+      padding: 0;
+    }
+    .cell-error {
+      background: #fff4e1 !important;
+      border: 2.5px solid #f57c00 !important;
+      animation: shake .2s;
+    }
+    @keyframes shake {
+      0% { transform: translateX(0);}
+      25% { transform: translateX(-2px);}
+      50% { transform: translateX(2px);}
+      75% { transform: translateX(-2px);}
+      100% { transform: translateX(0);}
+    }
+    .cage-label {
+      position: absolute;
+      top: 2px; left: 3px; right: 3px;
+      font-size: 1em;
+      color: #f57c00;
+      background: #fffde7cc;
+      border-radius: 5px;
+      padding: 0 2px;
+      font-family: inherit;
+      font-weight: bold;
+      letter-spacing: .5px;
+      pointer-events: none;
+      white-space: pre-line;
+      word-break: break-word;
+      line-height: 1.08;
+      text-align: left;
+      box-sizing: border-box;
+      max-height: 93%;
+      overflow-y: auto;
+      z-index: 2;
+    }
+    @media (max-width: 600px) {
+      .cell { width: 13vw; height: 13vw; min-width: 28px; min-height: 28px; font-size: 1em;}
+      .cage-label { font-size: .95em; }
+      .svg-logo { width: 90px; height: 34px;}
+    }
+    @media (max-width: 430px) {
+      .kenken-board .cell {width:14vw; height:14vw; min-width:18px; min-height:18px;}
+      .cage-label { font-size:.8em;}
+      .svg-logo { width: 68px; height: 28px;}
+    }
+    input[type="number"] {
+      width: 100%; height: 100%;
+      border: none;
+      text-align: center;
+      font-size: 1em;
+      font-family: inherit;
+      background: transparent;
+      outline: none;
+      color: #283593;
+      font-weight: bold;
+      caret-color: #c62828;
+      z-index: 1;
+    }
+    input[type="number"]:focus {
+      background: #ffebee;
+    }
+    .primes {
+      margin: .15em 0 0 0;
+      font-size: 0.98em;
+      color: #283593;
+      font-weight: bold;
+      letter-spacing: 1.1px;
+      text-align: center;
+      word-break: break-all;
+    }
+    .message {
+      margin: .12em 0 0 0;
+      font-size: 0.97em;
+      color: #d32f2f;
+      font-weight: bold;
+      min-height: 21px;
+      text-align: center;
+      letter-spacing: 1.2px;
+    }
+    .action-btns {
+      display: flex; flex-wrap: wrap;
+      justify-content: center; gap: 7px;
+      margin-top: .28em; margin-bottom: .15em;
+      width: 100%;
+    }
+    button {
+      padding: 6px 18px;
+      font-size: 1em;
+      background: linear-gradient(90deg,#c62828 80%,#f9a826 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      box-shadow: 0 1px 6px #0002;
+      font-weight: bold;
+      cursor: pointer;
+      letter-spacing: 1.2px;
+      transition: background .13s,box-shadow .15s,transform .11s;
+    }
+    button:hover, button:active {
+      background: linear-gradient(90deg,#f9a826 60%,#c62828 100%);
+      color: #212121;
+      transform: scale(1.04);
+    }
+    .footer {
+      margin-top: 11px;
+      font-size: 0.76em;
+      color: #ad1457;
+      opacity: 0.7;
+      text-align: center;
+      line-height: 1.5;
+      word-break: break-all;
+    }
+    #helpModal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(48,27,24,0.13);
+      justify-content: center;
+      align-items: center;
+    }
+    #helpModal .modal-inner {
+      background: #fff;
+      border-radius: 12px;
+      max-width: 350px;
+      box-shadow: 0 4px 24px #d32f2f33;
+      position: relative;
+      padding: 1.4em .7em .8em .7em;
+      animation: popIn .22s;
+      font-size: .98em;
+      line-height: 1.6;
+      color: #283593;
+    }
+    @keyframes popIn {
+      0% {transform: scale(0.94);}
+      100% {transform: scale(1);}
+    }
+    #closeHelpBtn {
+      position: absolute;
+      top: 7px; right: 14px;
+      font-size: 1.35em;
+      background: none; border: none;
+      color: #c62828;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="title-row">
+      <!-- SVG LOGO inline（+0 KenKen）-->
+      <svg class="svg-logo" viewBox="0 0 128 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="128" height="48" rx="10" fill="#fff" stroke="#232323" stroke-width="2.5"/>
+        <text x="15" y="36" font-family="ZCOOL KuaiLe, Arial, sans-serif" font-size="38" fill="#c62828" stroke="#111" stroke-width="2.4" font-weight="bold" letter-spacing="2">+0</text>
+        <text x="56" y="44" font-family="Arial, ZCOOL KuaiLe, sans-serif" font-size="15" fill="#222" font-weight="bold" letter-spacing="2">KenKen</text>
+      </svg>
+      <h1>灌籃高手<br>質數算獨 kenken</h1>
+    </div>
+    <div class="controls">
+      <label for="sizeSelect">盤面：</label>
+      <select id="sizeSelect">
+        <option value="3">3 × 3</option>
+        <option value="4">4 × 4</option>
+        <option value="5">5 × 5</option>
+        <option value="6">6 × 6</option>
+        <option value="7">7 × 7</option>
+        <option value="8">8 × 8</option>
+        <option value="9">9 × 9</option>
+      </select>
+      <button id="resetBtn">新盤面</button>
+      <button id="helpBtn">說明</button>
+    </div>
+    <div class="board-wrap">
+      <div class="kenken-board" id="board"></div>
+    </div>
+    <div class="primes" id="primes"></div>
+    <div class="message" id="message"></div>
+    <div class="action-btns">
+      <button id="checkBtn">檢查</button>
+      <button id="showAnsBtn">答案</button>
+      <button id="hintOneBtn">提示</button>
+      <button id="markErrBtn">錯誤</button>
+      <button id="printBtn">列印</button>
+    </div>
+    <div class="footer">
+      © 2025 灌籃高手質數算獨 KenKen<br>
+      Logo設計：+0 | 介面美術：灌籃高手風格 | 設計: ChatGPT + 你
+    </div>
+  </div>
+  <!-- 幫助說明 -->
+  <div id="helpModal">
+    <div class="modal-inner">
+      <button id="closeHelpBtn">✕</button>
+      <b>灌籃高手質數算獨</b>是一種將質數、算術與漫畫元素結合的邏輯遊戲。<br><br>
+      <b>【目標】</b><br>
+      - 每格填入100以內質數，使每行每列都不重複。<br>
+      - 每個粗框籠子必須達到標示的目標值與運算。<br><br>
+      <b>【操作】</b><br>
+      1. 盤面選擇不同尺寸與難度。<br>
+      2. 點格子輸入質數（非質數無效）。<br>
+      3. 按「檢查」即時驗證。<br>
+      4. 如需協助可用提示、標錯或看答案。<br>
+      <br>
+      過關會出現經典台詞：<span style="color:#d32f2f;">「教練，我想打籃球！」</span><br>
+      <br>
+      Enjoy！
+    </div>
+  </div>
+  <script>
+    // 100以內所有質數
+    const ALL_PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97];
+    let usedPrimes = [];
+    let size = 3, cages, solution, input, errorCells = [];
+    function shuffle(arr) { return arr.slice().sort(() => Math.random() - 0.5); }
+    function generateLatinSquare(n, pool) {
+      const smallPrimes = pool.filter(p => p < 20), bigPrimes = pool.filter(p => p >= 20);
+      const needSmall = Math.ceil(n / 2), needBig = n - needSmall;
+      let arr = shuffle(smallPrimes).slice(0, needSmall).concat(shuffle(bigPrimes).slice(0, needBig));
+      arr = shuffle(arr);
+      let square = [];
+      for (let i = 0; i < n; ++i) {
+        square.push([]);
+        for (let j = 0; j < n; ++j) square[i][j] = arr[(j + i) % n];
+      }
+      for (let i = 0; i < n; ++i) {
+        let swap = Math.floor(Math.random() * n);
+        [square[i], square[swap]] = [square[swap], square[i]];
+      }
+      for (let j = 0; j < n; ++j) {
+        let swap = Math.floor(Math.random() * n);
+        for (let i = 0; i < n; ++i) [square[i][j], square[i][swap]] = [square[i][swap], square[i][j]];
+      }
+      return { square, arr };
+    }
+    function autoCages(n, sol) {
+      let cells = [], used = Array.from({ length: n }, () => Array(n).fill(false)), cageSizes, cages = [];
+      for (let i = 0; i < n; ++i) for (let j = 0; j < n; ++j) cells.push([i, j]);
+      if (n === 3) { cageSizes = [2,2,2,1,2]; }
+      else if (n === 4) { cageSizes = [2,2,2,2,2,2,2,2]; }
+      else if (n === 5) { cageSizes = [3,2,2,2,2,2,2,2,2,2]; }
+      else {
+        let remain = n * n; cageSizes = [];
+        while (remain > 0) {
+          let maxSize = Math.min(6, remain), minSize = 2;
+          let size = Math.floor(Math.random() * (maxSize - minSize + 1)) + minSize;
+          if (remain - size < 2) size = remain;
+          cageSizes.push(size); remain -= size;
+        }
+      }
+      let idx = 0;
+      while (cells.length > 0 && idx < cageSizes.length) {
+        let randIdx = Math.floor(Math.random() * cells.length), [r, c] = cells[randIdx];
+        if (used[r][c]) { cells.splice(randIdx, 1); continue; }
+        let cage = [[r, c]]; used[r][c] = true; let last = [r, c];
+        for (let k = 1; k < cageSizes[idx]; ++k) {
+          let opts = [];
+          [[last[0]-1,last[1]],[last[0]+1,last[1]],[last[0],last[1]-1],[last[0],last[1]+1]].forEach(([nr, nc])=>{
+            if (nr >= 0 && nr < n && nc >= 0 && nc < n && !used[nr][nc] && !cage.some(([r0,c0])=>r0===nr&&c0===nc)) opts.push([nr, nc]);
+          });
+          if (opts.length === 0) break;
+          let pick = opts[Math.floor(Math.random() * opts.length)];
+          cage.push(pick); used[pick[0]][pick[1]] = true; last = pick;
+        }
+        const headIdx = Math.floor(Math.random() * cage.length);
+        cages.push({cells: cage, head: cage[headIdx]});
+        idx++; cells = cells.filter(([r, c]) => !used[r][c]);
+      }
+      for (const cage of cages) {
+        let nums = cage.cells.map(([r, c]) => sol[r][c]);
+        if (cage.cells.length === 1) { cage.op = '+'; cage.target = nums[0]; }
+        else if (cage.cells.length === 2) {
+          let [a, b] = nums, ops = [];
+          ops.push({op: '+', val: a + b});
+          ops.push({op: '×', val: a * b});
+          ops.push({op: '-', val: Math.abs(a - b)});
+          if (a % b === 0) ops.push({op: '÷', val: a / b});
+          if (b % a === 0) ops.push({op: '÷', val: b / a});
+          let pick = ops[Math.floor(Math.random() * ops.length)];
+          cage.op = pick.op; cage.target = pick.val;
+        } else {
+          if (Math.random() < 0.5) {
+            cage.op = '+'; cage.target = nums.reduce((a, b) => a + b, 0);
+          } else {
+            const bigPrimes = nums.filter(x => x >= 10);
+            if (bigPrimes.length > 1) {
+              cage.op = '+'; cage.target = nums.reduce((a, b) => a + b, 0);
+            } else {
+              cage.op = '×'; cage.target = nums.reduce((a, b) => a * b, 1);
+            }
+          }
+        }
+      }
+      return cages;
+    }
+    function getCageByCell(r, c) { return cages.find(cage => cage.cells.some(([rr, cc]) => rr === r && cc === c)); }
+
+    function renderBoard() {
+      errorCells = getErrorCells();
+      const boardDiv = document.getElementById('board');
+      boardDiv.innerHTML = '';
+      function isSameCage(r1, c1, r2, c2) {
+        if (r2 < 0 || r2 >= size || c2 < 0 || c2 >= size) return false;
+        const a = getCageByCell(r1, c1), b = getCageByCell(r2, c2);
+        return a && b && a === b;
+      }
+      for (let r = 0; r < size; ++r) {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'row';
+        for (let c = 0; c < size; ++c) {
+          const cellDiv = document.createElement('div');
+          cellDiv.className = 'cell';
+          if (errorCells.some(([rr,cc])=>rr===r&&cc===c)) cellDiv.classList.add('cell-error');
+          // 紅色粗細邊框
+          cellDiv.style.borderTop = isSameCage(r,c,r-1,c) ? "1px solid #c62828" : "3.5px solid #c62828";
+          cellDiv.style.borderBottom = isSameCage(r,c,r+1,c) ? "1px solid #c62828" : "3.5px solid #c62828";
+          cellDiv.style.borderLeft = isSameCage(r,c,r,c-1) ? "1px solid #c62828" : "3.5px solid #c62828";
+          cellDiv.style.borderRight = isSameCage(r,c,r,c+1) ? "1px solid #c62828" : "3.5px solid #c62828";
+          const cageObj = getCageByCell(r, c);
+          const isCageHead = cageObj && cageObj.head && cageObj.head[0] === r && cageObj.head[1] === c;
+          if (cageObj && isCageHead) {
+            const label = document.createElement('div');
+            label.className = 'cage-label';
+            label.textContent = cageObj.target + cageObj.op;
+            cellDiv.appendChild(label);
+          }
+          const inp = document.createElement('input');
+          inp.type = 'number';
+          inp.min = 2; inp.max = 97;
+          inp.value = input[r][c] ?? '';
+          inp.oninput = e => {
+            const v = Number(inp.value);
+            if (inp.value === '') { input[r][c] = null; }
+            else { input[r][c] = v; }
+            renderBoard(); document.getElementById('message').textContent = '';
+          };
+          cellDiv.appendChild(inp);
+          rowDiv.appendChild(cellDiv);
+        }
+        boardDiv.appendChild(rowDiv);
+      }
+      // 動態調整盤面寬度(每格+邊+間距)
+      const boardWrap = document.querySelector('.board-wrap');
+      const totalW = (size * 54 + size * 4 + 10) + 'px';
+      boardDiv.style.minWidth = totalW;
+      boardWrap.scrollLeft = 0;
+    }
+    function checkBoard() {
+      errorCells = getErrorCells(); renderBoard();
+      if (errorCells.length > 0) {
+        showMsg('有錯誤格子，請修正！😅');
+        return;
+      }
+      if (input.flat().some(x => x === null)) {
+        showMsg('尚有空格未填！');
+        return;
+      }
+      showMsg('教練，我想打籃球！🏀', true);
+    }
+    function showMsg(msg, ok) {
+      const m = document.getElementById('message');
+      m.textContent = msg;
+      m.style.color = ok ? '#f57c00' : '#d32f2f';
+    }
+    function resetGame() {
+      let n = size;
+      let { square, arr } = generateLatinSquare(n, ALL_PRIMES);
+      solution = square; usedPrimes = arr;
+      cages = autoCages(n, solution);
+      input = Array.from({ length: n }, () => Array(n).fill(null));
+      renderBoard();
+      document.getElementById('primes').textContent = '100以內所有質數：' + ALL_PRIMES.join(', ');
+      showMsg('');
+    }
+    function showAnswer() {
+      for (let r = 0; r < size; ++r)
+        for (let c = 0; c < size; ++c)
+          input[r][c] = solution[r][c];
+      renderBoard();
+      showMsg('已顯示答案', true);
+    }
+    function isPrime(n) { return ALL_PRIMES.includes(n); }
+    function getErrorCells() {
+      let errs = [];
+      for (let i = 0; i < size; ++i) {
+        let rowVals = {}, colVals = {};
+        for (let j = 0; j < size; ++j) {
+          let rv = input[i][j], cv = input[j][i];
+          if (rv !== null) rowVals[rv] = (rowVals[rv]||[]).concat([[i,j]]);
+          if (cv !== null) colVals[cv] = (colVals[cv]||[]).concat([[j,i]]);
+        }
+        Object.values(rowVals).forEach(arr=>{if(arr.length>1) errs.push(...arr);});
+        Object.values(colVals).forEach(arr=>{if(arr.length>1) errs.push(...arr);});
+      }
+      for (const cage of cages) {
+        const nums = cage.cells.map(([r, c]) => input[r][c]);
+        if (nums.some(x => x === null)) continue;
+        let ok = false;
+        if (cage.op === '+') ok = nums.reduce((a, b) => a + b, 0) === cage.target;
+        if (cage.op === '-') ok = Math.abs(nums[0] - nums[1]) === cage.target;
+        if (cage.op === '×') ok = nums.reduce((a, b) => a * b, 1) === cage.target;
+        if (cage.op === '÷') ok = (nums[0] / nums[1] === cage.target || nums[1] / nums[0] === cage.target);
+        if (!ok) errs.push(...cage.cells);
+      }
+      for (let r = 0; r < size; ++r)
+        for (let c = 0; c < size; ++c)
+          if (input[r][c] !== null && !isPrime(input[r][c])) errs.push([r, c]);
+      return Array.from(new Set(errs.map(([r,c])=>r+','+c))).map(s=>s.split(',').map(Number));
+    }
+    function showHintOne() {
+      let candidates = [];
+      for (let r = 0; r < size; ++r)
+        for (let c = 0; c < size; ++c)
+          if (input[r][c] !== solution[r][c]) candidates.push([r, c]);
+      if (candidates.length === 0) return;
+      let [r, c] = candidates[Math.floor(Math.random() * candidates.length)];
+      input[r][c] = solution[r][c];
+      renderBoard();
+      setTimeout(()=>{
+        const boardDiv = document.getElementById('board');
+        const cell = boardDiv.children[r].children[c];
+        cell.classList.add('cell-error');
+        setTimeout(()=>cell.classList.remove('cell-error'), 650);
+      }, 15);
+    }
+    function markErrorCells() { errorCells = getErrorCells(); renderBoard(); showMsg('已標記錯誤格子'); }
+    function printPuzzleAndSolution() {
+      let n = size, cellSize = Math.floor(230 / n);
+      let puzzleHTML = `<h2>質數算獨 KenKen 題目</h2><div>盤面大小：${n} × ${n}</div><table style="border-collapse:collapse;margin:16px 0;">`;
+      for (let r = 0; r < n; ++r) {
+        puzzleHTML += '<tr>';
+        for (let c = 0; c < n; ++c) {
+          const cageObj = getCageByCell(r, c), isCageHead = cageObj && cageObj.head && cageObj.head[0] === r && cageObj.head[1] === c;
+          let label = isCageHead ? `<div style='font-size:15px;color:#f57c00;font-weight:bold;word-break:break-all;'>${cageObj.target}${cageObj.op}</div>` : '';
+          // 列印也用紅色粗細框
+          function isSameCage(r1,c1,r2,c2){
+            if(r2<0||r2>=n||c2<0||c2>=n)return false;
+            const a = getCageByCell(r1,c1),b = getCageByCell(r2,c2);
+            return a&&b&&a===b;
+          }
+          let border = '';
+          border += isSameCage(r,c,r-1,c) ? "border-top:1px solid #c62828;" : "border-top:3px solid #c62828;";
+          border += isSameCage(r,c,r+1,c) ? "border-bottom:1px solid #c62828;" : "border-bottom:3px solid #c62828;";
+          border += isSameCage(r,c,r,c-1) ? "border-left:1px solid #c62828;" : "border-left:3px solid #c62828;";
+          border += isSameCage(r,c,r,c+1) ? "border-right:1px solid #c62828;" : "border-right:3px solid #c62828;";
+          puzzleHTML += `<td style='width:${cellSize}px;height:${cellSize}px;${border} background:#fff;text-align:center;vertical-align:top;position:relative;'>${label}</td>`;
+        }
+        puzzleHTML += '</tr>';
+      }
+      puzzleHTML += `</table><div style="font-size:15px;color:#283593;margin:7px 0 0 0;">100以內所有質數：${ALL_PRIMES.join(', ')}</div>`;
+      // 印答案
+      let ansHTML = '<h2>解答</h2><table style="border-collapse:collapse;margin:16px 0;">';
+      for (let r = 0; r < n; ++r) {
+        ansHTML += '<tr>';
+        for (let c = 0; c < n; ++c)
+          ansHTML += `<td style='width:${cellSize}px;height:${cellSize}px; border:1px solid #c62828; text-align:center;background:#fff;'>${solution[r][c]}</td>`;
+        ansHTML += '</tr>';
+      }
+      ansHTML += '</table>';
+      let win = window.open('', '', 'width=800,height=600');
+      win.document.write(`<!DOCTYPE html><html><head><title>列印質數算獨</title></head><body style='font-family:sans-serif;'>${puzzleHTML}<hr>${ansHTML}</body></html>`);
+      win.document.close(); setTimeout(() => win.print(), 250);
+    }
+    document.getElementById('resetBtn').onclick = resetGame;
+    document.getElementById('checkBtn').onclick = checkBoard;
+    document.getElementById('showAnsBtn').onclick = showAnswer;
+    document.getElementById('printBtn').onclick = printPuzzleAndSolution;
+    document.getElementById('sizeSelect').onchange = function() { size = parseInt(this.value, 10); resetGame(); };
+    document.getElementById('helpBtn').onclick = function() { document.getElementById('helpModal').style.display = 'flex'; };
+    document.getElementById('closeHelpBtn').onclick = function() { document.getElementById('helpModal').style.display = 'none'; };
+    document.getElementById('hintOneBtn').onclick = showHintOne;
+    document.getElementById('markErrBtn').onclick = markErrorCells;
+    resetGame();
+  </script>
+</body>
+</html>
